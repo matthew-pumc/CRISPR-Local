@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use Getopt::Long;
+use File::Basename;
 use File::Find;
 use File::Path;
 use Cwd;
@@ -34,6 +35,7 @@ my $dir_default = getcwd;             #default output
 $path ||= $dir_default;
 $label ||= "CRISPR";
 $process ||= "1";
+my $script_dir = dirname(__FILE__);     # perl script path
 my $dir =$path;
 my $errmsg = "Use '$0 -h' for quick help; for more information, please see README.";
 
@@ -470,7 +472,7 @@ if ($opt_mode eq "cas9") {
 			}
 		}
 		$pm->start and next;
-		my @args_rs2 = ("python","Rule_Set_2_scoring_v1/analysis/rs2_score_calculator.py","--input","$dir/$label.Possible.sgRNA/$label.Possible.sgRNA.$j.fasta","--output","$dir/$label.Possible.sgRNA/$label.Possible.sgRNA.$j.score.fasta");
+		my @args_rs2 = ("python","$script_dir/Rule_Set_2_scoring_v1/analysis/rs2_score_calculator.py","--input","$dir/$label.Possible.sgRNA/$label.Possible.sgRNA.$j.fasta","--output","$dir/$label.Possible.sgRNA/$label.Possible.sgRNA.$j.score.fasta");
 		LABEL1:{
 			system(@args_rs2);
 			if($? == -1) {
@@ -487,7 +489,7 @@ if ($opt_mode eq "cas9") {
 	print LOG  "# Step7: Mapping Possible sgRNA to potential off-target sites.\n";
 	for (my $j=1; $j<=$file_num; $j++) {
 		$pm->start and next;
-		my $args_seqmap = ("./seqmap-1.0.12-linux-64 4 $dir/$label.Possible.sgRNA/$label.Possible.sgRNA.$j.score.fasta $dir/$label.Potential.off.target/$label.POT.fasta $dir/$label.Seqmap.result/$label.seqmap_output.$j.txt /output_all_matches /skip_N /no_duplicate_probes /forward_strand /silent >> $dir/$label.Seqmap.result/$label.seqmap.LOG.txt");
+		my $args_seqmap = ("$script_dir/seqmap-1.0.12-linux-64 4 $dir/$label.Possible.sgRNA/$label.Possible.sgRNA.$j.score.fasta $dir/$label.Potential.off.target/$label.POT.fasta $dir/$label.Seqmap.result/$label.seqmap_output.$j.txt /output_all_matches /skip_N /no_duplicate_probes /forward_strand /silent >> $dir/$label.Seqmap.result/$label.seqmap.LOG.txt");
 		LABEL2:{
 			system($args_seqmap);
 			if($? == -1) {
@@ -508,7 +510,7 @@ if ($opt_mode eq "cas9") {
 	
 	for (my $j=1; $j<=$file_num; $j++) {
 		$pm->start and next;
-		my @args_format = ("perl","sgRNA_reformatting.pl", "$opt_mode","$dir/$label.annotation.index", "$dir/$label.Seqmap.result/$label.seqmap_output.$j.txt", "$dir/$label.Seqmap.result/$label.result.$j.txt");
+		my @args_format = ("perl","$script_dir/sgRNA_reformatting.pl", "$opt_mode","$dir/$label.annotation.index", "$dir/$label.Seqmap.result/$label.seqmap_output.$j.txt", "$dir/$label.Seqmap.result/$label.result.$j.txt");
 		LABEL3:{
 			system(@args_format);
 			if($? == -1) {
@@ -525,7 +527,7 @@ if ($opt_mode eq "cas9") {
 	print LOG  "# Step9: Calculates the Cutting Frequency Determination score.\n";
 	for (my $j=1; $j<=$file_num; $j++) {
 		$pm->start and next;
-		my @args_CFD = ("python","cfd-score-calculator.py","--input","$dir/$label.Seqmap.result/$label.result.$j.txt","--output","$dir/$label.Seqmap.result/$label.CFD.$j.txt");
+		my @args_CFD = ("python","$script_dir/cfd-score-calculator.py","--input","$dir/$label.Seqmap.result/$label.result.$j.txt","--output","$dir/$label.Seqmap.result/$label.CFD.$j.txt");
 		system(@args_CFD);
 		if($? == -1) {
 			die "system @args_CFD failed: $?";
@@ -908,7 +910,7 @@ if ($opt_mode eq "cas9") {
 	
 	for (my $j=1; $j<=$file_num; $j++) {
 		$pm->start and next;
-		my @args_format = ("perl","sgRNA_reformatting.pl", "$opt_mode", "$dir/$label.annotation.index", "$dir/$label.Seqmap.result/$label.seqmap_output.$j.txt", "$dir/$label.Seqmap.result/$label.result.$j.txt");
+		my @args_format = ("perl","$script_dir/sgRNA_reformatting.pl", "$opt_mode", "$dir/$label.annotation.index", "$dir/$label.Seqmap.result/$label.seqmap_output.$j.txt", "$dir/$label.Seqmap.result/$label.result.$j.txt");
 		LABEL3:{
 			system(@args_format);
 			if($? == -1) {
@@ -1246,7 +1248,7 @@ if ($opt_mode eq "cas9") {
 	print LOG  "# Step6: Mapping Possible sgRNA to potential off-target sites.\n";
 	for (my $j=1; $j<=$file_num; $j++) {
 		$pm->start and next;
-		my $args_seqmap = ("./seqmap-1.0.12-linux-64 4 $dir/$label.Possible.sgRNA/$label.Possible.sgRNA.$j.fasta $dir/$label.Potential.off.target/$label.POT.fasta $dir/$label.Seqmap.result/$label.seqmap_output.$j.txt /output_all_matches /skip_N /no_duplicate_probes /forward_strand /silent >> $dir/$label.Seqmap.result/$label.seqmap.LOG.txt");
+		my $args_seqmap = ("$script_dir/seqmap-1.0.12-linux-64 4 $dir/$label.Possible.sgRNA/$label.Possible.sgRNA.$j.fasta $dir/$label.Potential.off.target/$label.POT.fasta $dir/$label.Seqmap.result/$label.seqmap_output.$j.txt /output_all_matches /skip_N /no_duplicate_probes /forward_strand /silent >> $dir/$label.Seqmap.result/$label.seqmap.LOG.txt");
 		LABEL2:{
 			system($args_seqmap);
 			if($? == -1) {
@@ -1267,7 +1269,7 @@ if ($opt_mode eq "cas9") {
 	
 	for (my $j=1; $j<=$file_num; $j++) {
 		$pm->start and next;
-		my @args_format = ("perl","sgRNA_reformatting.pl", "$opt_mode", "$dir/$label.annotation.index", "$dir/$label.Seqmap.result/$label.seqmap_output.$j.txt", "$dir/$label.Seqmap.result/$label.result.$j.txt");
+		my @args_format = ("perl","$script_dir/sgRNA_reformatting.pl", "$opt_mode", "$dir/$label.annotation.index", "$dir/$label.Seqmap.result/$label.seqmap_output.$j.txt", "$dir/$label.Seqmap.result/$label.result.$j.txt");
 		LABEL3:{
 			system(@args_format);
 			if($? == -1) {
